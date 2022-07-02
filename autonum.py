@@ -1,7 +1,5 @@
-import sys
-import os
 import argparse
-from typing import List
+from typing import List, Tuple
 import re
 
 label_pat = re.compile(r"(@[A-Za-z][\w0-9]*)")
@@ -15,13 +13,14 @@ class TagError(Exception):
     pass
 
 
-def arguments() -> argparse.Namespace:
+def arguments() -> Tuple[argparse.ArgumentParser, argparse.Namespace]:
     parser = argparse.ArgumentParser(description="A script that automatically assigns line numbers to BASIC programs")
     parser.add_argument("BASIC_FILE_PATH", help="Path to .bas file")
     parser.add_argument("DEST_FILE_PATH", help="Path to dest file")
+    parser.add_argument("-s", "--step", type=int, help="Increment of line number")
     parser.add_argument("-U", "--uppercase", action="store_true", help="Convert to Uppercase")
     args = parser.parse_args()
-    return args
+    return parser, args
 
 
 def add_line_num(file_buf: List[str], step: int = 10) -> List[str]:
@@ -102,10 +101,19 @@ def output_basic(filepath: str, file_buf: List[str]):
 
 
 if __name__ == "__main__":
-    args = arguments()
-    file_buf = input_basic(args.BASIC_FILE_PATH)
-    file_buf = add_line_num(file_buf)
-    file_buf = resolve_tag(file_buf)
-    if args.uppercase:
-        file_buf = uppercase(file_buf)
-    output_basic(args.DEST_FILE_PATH, file_buf)
+    parser, args = arguments()
+    try:
+        file_buf = input_basic(args.BASIC_FILE_PATH)
+        if args.step:
+            if args.step > 0:
+                file_buf = add_line_num(file_buf, args.step)
+            else:
+                parser.error("step number must greater than 0")
+        else:
+            file_buf = add_line_num(file_buf)
+        file_buf = resolve_tag(file_buf)
+        if args.uppercase:
+            file_buf = uppercase(file_buf)
+        output_basic(args.DEST_FILE_PATH, file_buf)
+    except Exception as e:
+        parser.error(e)
