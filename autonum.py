@@ -9,7 +9,7 @@ class AddLineNumberError(Exception):
     pass
 
 
-class TagError(Exception):
+class LabelError(Exception):
     pass
 
 
@@ -43,22 +43,22 @@ def add_line_num(file_buf: List[str], step: int = 10) -> List[str]:
     return new_file_buf
 
 
-def resolve_tag(file_buf: List[str]) -> List[str]:
+def resolve_label(file_buf: List[str]) -> List[str]:
     new_file_buf = []
-    tag_def = {}
-    tag_removed_buf: List[str] = []
+    label_def = {}
+    label_removed_buf: List[str] = []
     for i, l in enumerate(file_buf):
         m = label_pat.fullmatch(l)
         if m:
-            tag_def[m.group(1)] = re.fullmatch(r"([0-9]+)\s+.+", file_buf[i + 1]).group(1)
+            label_def[m.group(1)] = re.fullmatch(r"([0-9]+)\s+.+", file_buf[i + 1]).group(1)
         else:
-            tag_removed_buf.append(l)
-    for l in tag_removed_buf:
+            label_removed_buf.append(l)
+    for l in label_removed_buf:
         m = label_pat.search(l)
         if m:
-            if not m.group(1) in tag_def.keys():
-                raise TagError(f"{m.group(1)} not defined")
-            l = l.replace(m.group(1), tag_def[m.group(1)])
+            if not m.group(1) in label_def.keys():
+                raise LabelError(f"{m.group(1)} not defined")
+            l = l.replace(m.group(1), label_def[m.group(1)])
         new_file_buf.append(l)
     return new_file_buf
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
                 parser.error("step number must greater than 0")
         else:
             file_buf = add_line_num(file_buf)
-        file_buf = resolve_tag(file_buf)
+        file_buf = resolve_label(file_buf)
         if args.uppercase:
             file_buf = uppercase(file_buf)
         output_basic(args.DEST_FILE_PATH, file_buf)
