@@ -54,11 +54,11 @@ def resolve_label(file_buf: List[str]) -> List[str]:
         else:
             label_removed_buf.append(l)
     for l in label_removed_buf:
-        m = label_pat.search(l)
-        if m:
-            if not m.group(1) in label_def.keys():
-                raise LabelError(f"{m.group(1)} not defined")
-            l = l.replace(m.group(1), label_def[m.group(1)])
+        label_list = label_pat.findall(l)
+        for label in label_list:
+            if not label in label_def.keys():
+                raise LabelError(f"{label} not defined")
+            l = l.replace(label, label_def[label])
         new_file_buf.append(l)
     return new_file_buf
 
